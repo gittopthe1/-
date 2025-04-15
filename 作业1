@@ -1,0 +1,86 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve, roc_curve, auc
+
+y_true = [1, 0, 0, 1, 0, 0, 1, 1, 0, 0]
+y_score = [0.90, 0.40, 0.20, 0.60, 0.50, 0.40, 0.70, 0.40, 0.65, 0.35]
+precision, recall, _ = precision_recall_curve(y_true, y_score)
+pr_auc = auc(recall, precision)
+
+plt.figure()
+plt.plot(recall, precision, label=f'PR curve (AUC = {pr_auc:.2f})')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('Precision-Recall Curve')
+plt.legend(loc="lower left")
+plt.show()
+fpr, tpr, _ = roc_curve(y_true, y_score)
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+plt.plot(fpr, tpr, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], 'k--')  # 对角线表示随机分类器
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
+# 示例数据
+true_labels = np.array([
+    [0, 0, 1],
+    [0, 1, 0],
+    [1, 0, 0],
+    [0, 0, 1],
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 1, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [0, 1, 0]
+])
+
+predict_scores = np.array([
+    [0.1, 0.2, 0.7],
+    [0.1, 0.6, 0.3],
+    [0.5, 0.2, 0.3],
+    [0.1, 0.1, 0.8],
+    [0.4, 0.2, 0.4],
+    [0.6, 0.3, 0.1],
+    [0.4, 0.2, 0.4],
+    [0.4, 0.1, 0.5],
+    [0.1, 0.1, 0.8],
+    [0.1, 0.8, 0.1]
+])
+
+n_classes = true_labels.shape[1]
+
+# 计算每个类别的ROC曲线和AUC值
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(true_labels[:, i], predict_scores[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # 计算微平均ROC曲线和AUC值
+    fpr["micro"], tpr["micro"], _ = roc_curve(true_labels.ravel(), predict_scores.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+    # 绘制所有ROC曲线
+    plt.figure()
+    for i in range(n_classes):
+        plt.plot(fpr[i], tpr[i], label=f'ROC curve of class {i} (area = {roc_auc[i]:.2f})')
+
+        plt.plot(fpr["micro"], tpr["micro"], label=f'micro-average ROC curve (area = {roc_auc["micro"]:.2f})',
+                 linestyle=':')
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Some extension of Receiver operating characteristic to multi-class')
+        plt.legend(loc="lower right")
+        plt.show()
