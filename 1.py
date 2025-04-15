@@ -1,0 +1,44 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, roc_curve
+import matplotlib.pyplot as plt
+
+# 读取数据
+file_path = "D:\\game_assets\\ex2data2.txt"  # 使用双反斜杠来避免转义字符问题
+df = pd.read_csv(file_path, header=None, names=['feature1', 'feature2', 'label'])
+
+# 特征和标签分离
+X = df[['feature1', 'feature2']]
+y = df['label']
+
+# 数据划分
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.3, random_state=42)
+
+# 模型初始化及训练
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# 计算并打印模型评价指标
+y_pred = model.predict(X_test)
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("F1 Score:", f1_score(y_test, y_pred))
+
+# 预测概率用于计算AUC和绘制ROC曲线
+y_scores = model.predict_proba(X_test)[:, 1]
+print("AUC:", roc_auc_score(y_test, y_scores))
+
+# 绘制ROC曲线
+fpr, tpr, _ = roc_curve(y_test, y_scores)
+plt.figure()
+plt.plot(fpr, tpr, label='Logistic Regression (area = %0.2f)' % roc_auc_score(y_test, y_scores))
+plt.plot([0, 1], [0, 1], 'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc="lower right")
+plt.show()
